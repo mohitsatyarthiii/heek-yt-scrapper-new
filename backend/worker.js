@@ -853,7 +853,6 @@ const app = express();
 // CORS — configurable via CORS_ORIGINS env var (comma-separated), with sensible defaults
 const defaultOrigins = [
   "https://crawler.heekentertainment.com",
-  "https://heek-e.onrender.com",
   "https://heek-yt-scrapper-new.onrender.com",
   "http://localhost:5173",
   "http://localhost:4173",
