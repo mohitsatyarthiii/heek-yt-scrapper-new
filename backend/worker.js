@@ -1089,17 +1089,25 @@ app.post("/start", async (req, res) => {
 });
 
 app.get("/channels", async (req, res) => {
-  const { keyword, platform } = req.query;
-  const query = { email: { $ne: null } };
+  const { keyword, platform, email } = req.query; // Add email param
+  const query = {};
+  
   if (keyword) query.keyword = keyword;
   if (platform) query.platform = platform;
+  
+  // Optional email filter (if specifically requested)
+  if (email === 'true') {
+    query.email = { $ne: null };
+  } else if (email === 'false') {
+    query.email = null;
+  }
+  // If email not specified, return all channels
 
   const data = await Channel.find(query)
     .sort({ subscribers: -1 })
     .limit(10000);
   res.json(data);
 });
-
 app.get("/keywords", async (req, res) => {
   try {
     const keywords = await Channel.distinct("keyword", {
