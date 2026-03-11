@@ -49,7 +49,7 @@ export default function Creators() {
   const [viewMode, setViewMode] = useState("table"); // table or grid
   const [showFilters, setShowFilters] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(100);
   const [hoveredRow, setHoveredRow] = useState(null);
   const [stats, setStats] = useState(null);
   const [speed, setSpeed] = useState(null);
