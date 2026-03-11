@@ -10,7 +10,8 @@ import {
   Youtube,
   Tag,
   Layers,
-  Download
+  Download,
+  MailOpen
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "https://api.heekentertainment.com";
@@ -23,6 +24,7 @@ export default function Creators() {
   const [subscriberFilter, setSubscriberFilter] = useState("all");
   const [keywordFilter, setKeywordFilter] = useState("all");
   const [platformFilter, setPlatformFilter] = useState("all");
+  const [emailFilter, setEmailFilter] = useState("all"); // New email filter state
   const [uniqueCountries, setUniqueCountries] = useState([]);
   const [uniqueKeywords, setUniqueKeywords] = useState([]);
 
@@ -72,6 +74,13 @@ export default function Creators() {
     }
   };
 
+  // Get email status color
+  const getEmailStatusColor = (hasEmail) => {
+    return hasEmail 
+      ? 'bg-green-500/20 text-green-400' 
+      : 'bg-slate-500/20 text-slate-400';
+  };
+
   // Generate mailto link
   const getMailtoLink = (email) => {
     return `mailto:${email}`;
@@ -82,6 +91,7 @@ export default function Creators() {
       const params = new URLSearchParams();
       if (keywordFilter !== "all") params.set("keyword", keywordFilter);
       if (platformFilter !== "all") params.set("platform", platformFilter);
+      // Note: Email filter is applied client-side, not in API request
       const qs = params.toString() ? `?${params.toString()}` : "";
 
       const data = await fetch(API + "/channels" + qs).then((r) => r.json());
@@ -141,8 +151,16 @@ export default function Creators() {
       });
     }
 
+    // Apply email filter (NEW)
+    if (emailFilter !== "all") {
+      filtered = filtered.filter((channel) => {
+        const hasEmail = !!channel.email;
+        return emailFilter === "with-email" ? hasEmail : !hasEmail;
+      });
+    }
+
     setFilteredChannels(filtered);
-  }, [searchTerm, countryFilter, subscriberFilter, channels]);
+  }, [searchTerm, countryFilter, subscriberFilter, emailFilter, channels]);
 
   useEffect(() => {
     fetchKeywords();
@@ -157,6 +175,11 @@ export default function Creators() {
   // Calculate stats
   const totalSubscribers = channels.reduce((acc, c) => acc + (c.subscribers || 0), 0);
   const averageSubscribers = channels.length ? Math.round(totalSubscribers / channels.length) : 0;
+  
+  // Calculate email stats
+  const withEmail = channels.filter(c => c.email).length;
+  const withoutEmail = channels.filter(c => !c.email).length;
+  const emailRate = channels.length > 0 ? ((withEmail / channels.length) * 100).toFixed(1) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-8">
@@ -171,31 +194,35 @@ export default function Creators() {
             <p className="text-slate-400">Track and manage creators across all platforms</p>
           </div>
           
-          {/* Stats Cards */}
+          {/* Stats Cards - Updated to include email stats */}
           <div className="flex gap-4">
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl px-6 py-3">
               <p className="text-slate-400 text-sm">Total Creators</p>
               <p className="text-2xl font-bold text-white">{channels.length}</p>
             </div>
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl px-6 py-3">
-              <p className="text-slate-400 text-sm">Total Subs</p>
-              <p className="text-2xl font-bold text-white">{formatSubscribers(totalSubscribers)}</p>
+              <p className="text-slate-400 text-sm">With Email</p>
+              <p className="text-2xl font-bold text-green-400">{withEmail}</p>
             </div>
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl px-6 py-3">
-              <p className="text-slate-400 text-sm">Avg Subs</p>
-              <p className="text-2xl font-bold text-white">{formatSubscribers(averageSubscribers)}</p>
+              <p className="text-slate-400 text-sm">Email Rate</p>
+              <p className="text-2xl font-bold text-cyan-400">{emailRate}%</p>
+            </div>
+            <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl px-6 py-3">
+              <p className="text-slate-400 text-sm">Total Subs</p>
+              <p className="text-2xl font-bold text-white">{formatSubscribers(totalSubscribers)}</p>
             </div>
           </div>
         </div>
 
-        {/* Filters Section */}
+        {/* Filters Section - Added Email Filter */}
         <div className="bg-slate-900/80 backdrop-blur-sm border border-slate-800 rounded-xl p-6 mb-6">
           <div className="flex items-center gap-4 mb-4">
             <Filter className="w-5 h-5 text-slate-400" />
             <h2 className="text-white font-semibold">Filters</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
             {/* Search Input */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -276,6 +303,21 @@ export default function Creators() {
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
             </div>
 
+            {/* Email Filter - NEW */}
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <select
+                value={emailFilter}
+                onChange={(e) => setEmailFilter(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-8 py-2.5 text-white appearance-none cursor-pointer focus:outline-none focus:border-cyan-500 transition-colors"
+              >
+                <option value="all">All Emails</option>
+                <option value="with-email">With Email</option>
+                <option value="without-email">Without Email</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            </div>
+
             {/* Results Count + Export */}
             <div className="flex items-center justify-end gap-3 text-slate-400">
               <span className="text-sm">
@@ -333,6 +375,12 @@ export default function Creators() {
                     Email
                   </div>
                 </th>
+                <th className="p-5 text-center w-24">
+                  <div className="flex items-center justify-center gap-2 text-slate-300 font-semibold">
+                    <MailOpen className="w-4 h-4 text-green-400" />
+                    Status
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -381,11 +429,16 @@ export default function Creators() {
                         <span className="text-slate-600">No email</span>
                       )}
                     </td>
+                    <td className="p-5 text-center">
+                      <span className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold ${getEmailStatusColor(!!c.email)}`}>
+                        {c.email ? 'Has Email' : 'No Email'}
+                      </span>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-12 text-center">
+                  <td colSpan="6" className="p-12 text-center">
                     <div className="flex flex-col items-center gap-3 text-slate-500">
                       <Search className="w-12 h-12 opacity-50" />
                       <p className="text-lg">No creators found</p>
