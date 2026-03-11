@@ -851,14 +851,12 @@ function startWorkerPool() {
 const app = express();
 
 // CORS — configurable via CORS_ORIGINS env var (comma-separated), with sensible defaults
-const defaultOrigins = [
+const allowedOrigins = [
   "https://crawler.heekentertainment.com",
   "https://heek-yt-scrapper-new.onrender.com",
   "http://localhost:5173",
   "http://localhost:4173",
 ];
-const envOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map(s => s.trim()) : [];
-const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
 app.use(cors({
   origin: allowedOrigins,
